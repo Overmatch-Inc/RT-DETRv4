@@ -7,14 +7,21 @@ import torch.nn as nn
 from ..core import register
 
 
-__all__ = ['RTv4', ]
+__all__ = [
+    "RTv4",
+]
 
 
 @register()
 class RTv4(nn.Module):
-    __inject__ = ['backbone', 'encoder', 'decoder', ]
+    __inject__ = [
+        "backbone",
+        "encoder",
+        "decoder",
+    ]
 
-    def __init__(self, \
+    def __init__(
+        self,
         backbone: nn.Module,
         encoder: nn.Module,
         decoder: nn.Module,
@@ -38,15 +45,21 @@ class RTv4(nn.Module):
 
         x_decoder_out = self.decoder(x_fpn_features, targets)
 
-        if self.training and student_distill_output is not None and teacher_encoder_output is not None:
-            x_decoder_out['student_distill_output'] = student_distill_output
-            x_decoder_out['teacher_encoder_output'] = teacher_encoder_output
+        if (
+            self.training
+            and student_distill_output is not None
+            and teacher_encoder_output is not None
+        ):
+            x_decoder_out["student_distill_output"] = student_distill_output
+            x_decoder_out["teacher_encoder_output"] = teacher_encoder_output
 
         return x_decoder_out
 
-    def deploy(self, ):
+    def deploy(
+        self,
+    ):
         self.eval()
         for m in self.modules():
-            if hasattr(m, 'convert_to_deploy'):
+            if hasattr(m, "convert_to_deploy"):
                 m.convert_to_deploy()
         return self

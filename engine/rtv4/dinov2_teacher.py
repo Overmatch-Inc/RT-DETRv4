@@ -5,12 +5,10 @@ Copyright (c) 2025 The RT-DETRv4 Authors. All Rights Reserved.
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from ..core import register
 import logging
 from torchvision.transforms import v2 as transforms
 import torchvision.transforms.functional as TF
-import math
 
 _logger = logging.getLogger(__name__)
 
@@ -24,34 +22,32 @@ class DINOv2TeacherModel(nn.Module):
       matches the student's target feature map grid.
     """
 
-    def __init__(self,
-                 dinov2_repo_path: str,
-                 model_name: str = 'dinov2_vitl14_reg',
-                 weights_path: str = None,
-                 patch_size: int = 14,
-                 target_downsample_factor: int = 32,
-                 mean=(0.485, 0.456, 0.406),
-                 std=(0.229, 0.224, 0.225)):
+    def __init__(
+        self,
+        dinov2_repo_path: str,
+        model_name: str = "dinov2_vitl14_reg",
+        weights_path: str = None,
+        patch_size: int = 14,
+        target_downsample_factor: int = 32,
+        mean=(0.485, 0.456, 0.406),
+        std=(0.229, 0.224, 0.225),
+    ):
         super().__init__()
         self.patch_size = patch_size
         self.target_downsample_factor = target_downsample_factor
 
-        _logger.info(f"[Teacher Model] Initializing DINOv2 teacher via torch.hub.load...")
+        _logger.info("[Teacher Model] Initializing DINOv2 teacher via torch.hub.load...")
         _logger.info(f"[Teacher Model] DINOv2 repo path: {dinov2_repo_path}")
         _logger.info(f"[Teacher Model] Model name: {model_name}")
 
         try:
             # Load model architecture
-            self.model = torch.hub.load(
-                dinov2_repo_path,
-                model_name,
-                source='local'
-            )
+            self.model = torch.hub.load(dinov2_repo_path, model_name, source="local")
 
             # Load weights
             if weights_path:
                 _logger.info(f"[Teacher Model] Loading weights from: {weights_path}")
-                state_dict = torch.load(weights_path, map_location='cpu')
+                state_dict = torch.load(weights_path, map_location="cpu")
                 msg = self.model.load_state_dict(state_dict, strict=False)
                 _logger.info(f"[Teacher Model] Weight loading info: {msg}")
             else:
@@ -72,7 +68,7 @@ class DINOv2TeacherModel(nn.Module):
         # Input normalization transform
         self.normalize_transform = transforms.Normalize(mean=mean, std=std)
 
-        _logger.info(f"[Teacher Model] DINOv2 (Hub) initialized.")
+        _logger.info("[Teacher Model] DINOv2 (Hub) initialized.")
 
     def forward(self, images: torch.Tensor):
         B, _, H_in, W_in = images.shape
@@ -89,7 +85,7 @@ class DINOv2TeacherModel(nn.Module):
             normalized_images,
             [target_H_vit_in, target_W_vit_in],
             interpolation=TF.InterpolationMode.BICUBIC,
-            antialias=True
+            antialias=True,
         )
 
         with torch.no_grad():
@@ -97,7 +93,7 @@ class DINOv2TeacherModel(nn.Module):
             outputs_dict = self.model.forward_features(processed_images)
 
             # 'x_norm_patchtokens' contains only patch tokens
-            patch_tokens = outputs_dict['x_norm_patchtokens']  # [B, N_patches, C]
+            patch_tokens = outputs_dict["x_norm_patchtokens"]  # [B, N_patches, C]
 
             B, N_patches, C_teacher = patch_tokens.shape
 

@@ -7,7 +7,9 @@ import math
 from functools import partial
 
 
-def flat_cosine_schedule(total_iter, warmup_iter, flat_iter, no_aug_iter, current_iter, init_lr, min_lr):
+def flat_cosine_schedule(
+    total_iter, warmup_iter, flat_iter, no_aug_iter, current_iter, init_lr, min_lr
+):
     """
     Computes the learning rate using a warm-up, flat, and cosine decay schedule.
 
@@ -30,8 +32,12 @@ def flat_cosine_schedule(total_iter, warmup_iter, flat_iter, no_aug_iter, curren
     elif current_iter >= total_iter - no_aug_iter:
         return min_lr
     else:
-        cosine_decay = 0.5 * (1 + math.cos(math.pi * (current_iter - flat_iter) /
-                                           (total_iter - flat_iter - no_aug_iter)))
+        cosine_decay = 0.5 * (
+            1
+            + math.cos(
+                math.pi * (current_iter - flat_iter) / (total_iter - flat_iter - no_aug_iter)
+            )
+        )
         return min_lr + (init_lr - min_lr) * cosine_decay
 
 
@@ -48,8 +54,18 @@ class FlatCosineLRScheduler:
         flat_epochs (int): Number of flat epochs (for flat-cosine scheduler).
         no_aug_epochs (int): Number of no-augmentation epochs.
     """
-    def __init__(self, optimizer, lr_gamma, iter_per_epoch, total_epochs, 
-                 warmup_iter, flat_epochs, no_aug_epochs, scheduler_type="cosine"):
+
+    def __init__(
+        self,
+        optimizer,
+        lr_gamma,
+        iter_per_epoch,
+        total_epochs,
+        warmup_iter,
+        flat_epochs,
+        no_aug_epochs,
+        scheduler_type="cosine",
+    ):
         self.base_lrs = [group["initial_lr"] for group in optimizer.param_groups]
         self.min_lrs = [base_lr * lr_gamma for base_lr in self.base_lrs]
 
@@ -58,7 +74,9 @@ class FlatCosineLRScheduler:
         flat_iter = int(iter_per_epoch * flat_epochs)
 
         print(self.base_lrs, self.min_lrs, total_iter, warmup_iter, flat_iter, no_aug_iter)
-        self.lr_func = partial(flat_cosine_schedule, total_iter, warmup_iter, flat_iter, no_aug_iter)
+        self.lr_func = partial(
+            flat_cosine_schedule, total_iter, warmup_iter, flat_iter, no_aug_iter
+        )
 
     def step(self, current_iter, optimizer):
         """

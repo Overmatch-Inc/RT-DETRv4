@@ -2,13 +2,14 @@ import torch
 import os
 import argparse
 
+
 def save_only_ema_weights(checkpoint_file):
     """Extract and save only the EMA weights."""
-    checkpoint = torch.load(checkpoint_file, map_location='cpu')
+    checkpoint = torch.load(checkpoint_file, map_location="cpu")
 
     weights = {}
-    if 'ema' in checkpoint:
-        weights['model'] = checkpoint['ema']['module']
+    if "ema" in checkpoint:
+        weights["model"] = checkpoint["ema"]["module"]
     else:
         raise ValueError("The checkpoint does not contain 'ema'.")
 
@@ -19,11 +20,12 @@ def save_only_ema_weights(checkpoint_file):
     torch.save(weights, output_file)
     print(f"EMA weights saved to {output_file}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract and save only EMA weights.")
-    parser.add_argument('checkpoint_dir', type=str, help="Path to the input checkpoint file.")
+    parser.add_argument("checkpoint_dir", type=str, help="Path to the input checkpoint file.")
 
     args = parser.parse_args()
     for file in os.listdir(args.checkpoint_dir):
-        if '.pth' in file and '_converted' not in file:
+        if ".pth" in file and "_converted" not in file:
             save_only_ema_weights(os.path.join(args.checkpoint_dir, file))
